@@ -51,3 +51,5 @@ GTK 4 and PyGObject. Use `--help` for command-line options.
 To share the app, send only the AppImage. It includes Python, GTK and dependency
 license notices under `usr/share/doc/bundled-licenses/` inside the image.
 Each recipient enables access on their own machine.
+
+Build instructions and regression tests are in [build/README.md](build/README.md).

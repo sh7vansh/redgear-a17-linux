@@ -1,0 +1,21 @@
+#!/bin/sh
+set -eu
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+APPDIR="${APPDIR:-$script_dir/Redgear-A17.AppDir}"
+export APPDIR
+export PYTHONHOME="$APPDIR/usr"
+export PYTHONPATH="$APPDIR/usr/lib/python3/dist-packages"
+export PYTHONNOUSERSITE=1
+export PYTHONDONTWRITEBYTECODE=1
+export LD_LIBRARY_PATH="$APPDIR/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export GI_TYPELIB_PATH="$APPDIR/usr/lib/girepository-1.0"
+export GSETTINGS_SCHEMA_DIR="$APPDIR/usr/share/glib-2.0/schemas"
+export GIO_MODULE_DIR="$APPDIR/usr/lib/gio/modules"
+export FONTCONFIG_FILE="$APPDIR/etc/fonts/fonts.conf"
+export XDG_DATA_DIRS="$APPDIR/usr/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+export GSK_RENDERER=cairo
+export REDGEAR_DATA_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/redgear-a17"
+mkdir -p "$REDGEAR_DATA_DIR"
+export FONTCONFIG_FILE="$REDGEAR_DATA_DIR/fonts.conf"
+"$APPDIR/usr/bin/python3.10" -c 'import os; from pathlib import Path; from xml.sax.saxutils import escape; fonts=escape(os.environ["APPDIR"] + "/usr/share/fonts/truetype/dejavu"); Path(os.environ["FONTCONFIG_FILE"]).write_text("<fontconfig><dir>" + fonts + "</dir><cachedir prefix=\"xdg\">fontconfig</cachedir><alias><family>sans-serif</family><prefer><family>DejaVu Sans</family></prefer></alias></fontconfig>")'
+exec "$APPDIR/usr/bin/python3.10" "$script_dir/smoke.py"

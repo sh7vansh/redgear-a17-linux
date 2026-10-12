@@ -1,2 +1,9 @@
 __pycache__/
 *.py[cod]
+
+# Generated packaging files and downloaded tools
+/build/Redgear-A17.AppDir/
+/build/*.AppImage
+/build/runtime-x86_64
+/build/tool/
+/build/appimage-gui.png

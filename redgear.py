@@ -286,68 +286,98 @@ def run_gui(device=None):
     import threading
     import gi
     gi.require_version("Gtk", "4.0")
-    from gi.repository import Gtk, GLib
+    gi.require_version("Adw", "1")
+    from gi.repository import Adw, Gtk, GLib
 
-    app = Gtk.Application(application_id='local.redgear.A17')
+    app = Adw.Application(application_id='local.redgear.A17')
 
     def activate(application):
         existing = application.get_active_window()
         if existing:
             existing.present()
             return
-        window = Gtk.ApplicationWindow(application=application, title='Redgear A-17')
-        window.set_default_size(480, 580)
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
-        for side in ('top', 'bottom', 'start', 'end'):
-            getattr(box, 'set_margin_' + side)(28)
-        window.set_child(box)
-        title = Gtk.Label(label='Mouse settings', xalign=0)
-        title.add_css_class('title-1')
-        box.append(title)
-        subtitle = Gtk.Label(label='Redgear A-17', xalign=0)
-        subtitle.add_css_class('dim-label')
-        box.append(subtitle)
-        grid = Gtk.Grid(column_spacing=28, row_spacing=18)
-        box.append(grid)
-        dpi = Gtk.DropDown.new_from_strings(['Reading mouse…'])
-        led = Gtk.DropDown.new_from_strings([x.capitalize() for x in LED_MODES])
-        speed = Gtk.SpinButton.new_with_range(1, 8, 1)
-        for row, (label, widget) in enumerate((('DPI preset', dpi),
-                                              ('Lighting', led),
-                                              ('Effect speed', speed))):
-            grid.attach(Gtk.Label(label=label, xalign=0), 0, row, 1, 1)
-            widget.set_hexpand(True)
-            grid.attach(widget, 1, row, 1, 1)
-        heading = Gtk.Label(label='Side buttons', xalign=0)
-        heading.add_css_class('heading')
-        grid.attach(heading, 0, 3, 2, 1)
-        button_controls = {}
-        for i, (number, label) in enumerate(SIDE_BUTTONS.items()):
-            dropdown = Gtk.DropDown.new_from_strings(['Reading…'])
-            dropdown.set_enable_search(True)
-            dropdown.set_hexpand(True)
-            grid.attach(Gtk.Label(label=label, xalign=0), 0, i + 4, 1, 1)
-            grid.attach(dropdown, 1, i + 4, 1, 1)
-            button_controls[number] = dropdown
-        message = Gtk.Label(label='Connecting…', xalign=0, wrap=True)
-        message.set_selectable(True)
-        box.append(message)
-        permissions = Gtk.Box(spacing=12)
-        access_button = Gtk.Button(label='Add permissions')
-        remove_access = Gtk.Button(label='Remove permissions')
-        for button in (access_button, remove_access):
-            button.set_hexpand(True)
-            button.set_tooltip_text('Requires administrator authentication.')
-            permissions.append(button)
-        box.append(permissions)
-        buttons = Gtk.Box(spacing=12)
+        window = Adw.ApplicationWindow(application=application, title='Redgear A-17')
+        window.set_default_size(560, 760)
+        layout = Adw.ToolbarView()
+        window.set_content(layout)
+        header = Adw.HeaderBar()
+        header.set_title_widget(Adw.WindowTitle(title='Redgear A-17', subtitle='Mouse settings'))
         refresh = Gtk.Button(label='Refresh')
+        refresh.set_tooltip_text('Read the current settings from the mouse')
+        header.pack_start(refresh)
         apply = Gtk.Button(label='Apply settings')
         apply.add_css_class('suggested-action')
-        buttons.append(refresh)
-        buttons.append(apply)
-        box.append(buttons)
-        state = {'ready': False, 'busy': False}
+        header.pack_end(apply)
+        layout.add_top_bar(header)
+
+        scroll = Gtk.ScrolledWindow(vexpand=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+        layout.set_content(scroll)
+        clamp = Adw.Clamp(maximum_size=620, tightening_threshold=480)
+        scroll.set_child(clamp)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=24)
+        for side in ('top', 'bottom', 'start', 'end'):
+            getattr(box, 'set_margin_' + side)(24)
+        clamp.set_child(box)
+
+        status = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        status.set_halign(Gtk.Align.CENTER)
+        icon = Gtk.Image.new_from_icon_name('input-mouse-symbolic')
+        icon.set_pixel_size(48)
+        status.append(icon)
+        title = Gtk.Label(label='Redgear A-17')
+        title.add_css_class('title-1')
+        status.append(title)
+        progress = Gtk.Spinner()
+        progress.set_halign(Gtk.Align.CENTER)
+        status.append(progress)
+        message = Gtk.Label(label='Connecting…', wrap=True, justify=Gtk.Justification.CENTER)
+        message.set_selectable(True)
+        message.add_css_class('dim-label')
+        status.append(message)
+        box.append(status)
+
+        grid = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=24)
+        box.append(grid)
+        pointer = Adw.PreferencesGroup(title='Pointer', description='Choose one of the mouse’s stored DPI presets.')
+        grid.append(pointer)
+        dpi = Adw.ComboRow(title='DPI preset', model=Gtk.StringList.new(['Reading mouse…']))
+        pointer.add(dpi)
+        lighting = Adw.PreferencesGroup(title='Lighting')
+        grid.append(lighting)
+        led = Adw.ComboRow(title='Effect', model=Gtk.StringList.new([x.capitalize() for x in LED_MODES]))
+        lighting.add(led)
+        speed = Adw.SpinRow.new_with_range(1, 8, 1)
+        speed.set_title('Effect speed')
+        speed.set_subtitle('1 is slowest, 8 is fastest')
+        lighting.add(speed)
+        side_buttons = Adw.PreferencesGroup(title='Side buttons', description='Assign navigation, media or mouse actions.')
+        grid.append(side_buttons)
+        button_controls = {}
+        for number, label in SIDE_BUTTONS.items():
+            row = Adw.ComboRow(title=label, model=Gtk.StringList.new(['Reading…']))
+            row.set_enable_search(True)
+            side_buttons.add(row)
+            button_controls[number] = row
+
+        permissions = Adw.PreferencesGroup(title='Mouse access',
+            description='Administrator authentication is required to change permissions.')
+        box.append(permissions)
+        access_row = Adw.ActionRow(title='Configuration access')
+        access_button = Gtk.Button(label='Add permissions', valign=Gtk.Align.CENTER)
+        access_row.add_suffix(access_button)
+        access_row.set_activatable_widget(access_button)
+        permissions.add(access_row)
+        removal_row = Adw.ActionRow(title='Remove access', subtitle='Reconnect the mouse after removal')
+        remove_access = Gtk.Button(label='Remove permissions', valign=Gtk.Align.CENTER)
+        remove_access.add_css_class('destructive-action')
+        removal_row.add_suffix(remove_access)
+        removal_row.set_activatable_widget(remove_access)
+        permissions.add(removal_row)
+        state = {'ready': False, 'busy': False, 'initial_load': True}
+
+        def scroll_to_start():
+            scroll.get_vadjustment().set_value(0)
+            return False
 
         def sync_controls():
             allowed = mouse_access_enabled()
@@ -365,6 +395,8 @@ def run_gui(device=None):
 
         def busy(value):
             state['busy'] = value
+            progress.set_spinning(value)
+            progress.set_visible(value)
             sync_controls()
 
         def finish(result, error, applying, removing=False):
@@ -401,6 +433,8 @@ def run_gui(device=None):
                 state['ready'] = True
                 message.set_text('Settings saved and verified.' if applying else 'Mouse connected.')
             busy(False)
+            if state.pop('initial_load', False):
+                GLib.timeout_add(300, scroll_to_start)
             return False
 
         def job(applying=False, enable_access=False, removing=False):
@@ -419,7 +453,7 @@ def run_gui(device=None):
                     if action != state['buttons'][str(number)]:
                         mappings[number] = action
             requested = ((dpi.get_selected() + 1, list(LED_MODES)[led.get_selected()],
-                          speed.get_value_as_int(), mappings) if applying else None)
+                          int(speed.get_value()), mappings) if applying else None)
             busy(True)
             message.set_text('Removing permissions…' if removing else
                              'Adding permissions…' if enable_access else
@@ -460,6 +494,7 @@ def run_gui(device=None):
         remove_access.connect('clicked', lambda *_: job(removing=True))
         permission_watch = GLib.timeout_add(750, sync_controls)
         window.connect('destroy', lambda *_: GLib.source_remove(permission_watch))
+        window.set_focus(refresh)
         window.present()
         job()
 
@@ -522,7 +557,7 @@ def setup(graphical=False, remove=False):
 def main():
     p = argparse.ArgumentParser(description=__doc__, epilog=
         'Supported mouse: tested Redgear A-17 protocol (USB 1bcf:08a0, identity aa0cfd). '
-        'AppImage build: x86_64 Linux with glibc 2.35 or newer. '
+        'AppImage build: x86_64 Linux with a bundled C runtime. '
         'Use setup once on a new machine to enable mouse access.')
     p.add_argument('--device')
     p.add_argument('--trace', action='store_true')

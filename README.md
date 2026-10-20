@@ -12,7 +12,8 @@ chmod +x Redgear-A17-x86_64.AppImage
 ./Redgear-A17-x86_64.AppImage
 ```
 
-Requires x86_64 Linux with glibc 2.35 or newer. If FUSE is unavailable:
+Requires x86_64 Linux. The AppImage bundles its C runtime and was validated
+on Fedora 44. Older distributions have not been validated. If FUSE is unavailable:
 
 ```sh
 ./Redgear-A17-x86_64.AppImage --appimage-extract-and-run
@@ -46,7 +47,18 @@ identities are rejected. Windows, macOS and ARM builds are not included.
 ## Source and sharing
 
 `redgear.py` is the standalone source. Running its GUI requires Python 3,
-GTK 4 and PyGObject. Use `--help` for command-line options.
+GTK 4.12 or newer, libadwaita 1.4 or newer and PyGObject. The interface follows the
+system light or dark appearance using native Adwaita widgets.
+
+On Fedora, install source dependencies and launch with:
+
+```sh
+sudo dnf install python3-gobject gtk4 libadwaita
+python3 redgear.py
+```
+
+The AppImage bundles GTK 4.24.1 and libadwaita 1.10.0.
+Use `--help` for command-line options.
 
 To share the app, send only the AppImage. It includes Python, GTK and dependency
 license notices under `usr/share/doc/bundled-licenses/` inside the image.

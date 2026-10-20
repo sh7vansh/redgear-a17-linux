@@ -1,12 +1,13 @@
 # Sharing Redgear A-17 for Linux
 
-Share only `Redgear-A17-x86_64.AppImage`. It includes Python and GTK; recipients
+Share only `Redgear-A17-x86_64.AppImage`. It includes Python, GTK4 and libadwaita; recipients
 do not need the source script or your desktop shortcut.
 
-This build is for x86_64 Linux with glibc 2.35 or newer (for example, Ubuntu
-22.04 or newer). It is not a Windows/macOS/ARM build, and does not target Alpine
-Linux's musl runtime. GUI and mouse access were tested on Fedora 44; bundled
-Python/GTK imports were also tested in a clean Ubuntu 22.04 container.
+This build is for x86_64 Linux and includes its own C runtime.
+It is validated on Fedora 44; older distributions have not been validated. It is not a Windows/macOS/ARM build, and does not target Alpine
+Linux's musl runtime. The bundle includes GTK 4.24.1 and libadwaita 1.10.0.
+GUI flows are tested on Fedora 44 with simulated mouse data; the protocol
+was previously tested with a physical Redgear A-17.
 
 Only the tested Redgear A-17 protocol is enabled: USB 1bcf:08a0 and identity
 aa0cfd. Other retail models and A-17 revisions are not guaranteed. Unsupported
@@ -52,5 +53,5 @@ Refresh or reopening. Unplug and reconnect the mouse to clear the old Linux
 access grant on the connected device.
 Removal does not reset the mouse settings or remove other permission rules.
 
-GTK/Python and other bundled dependency copyright notices are included under
+GTK/libadwaita/Python and other bundled dependency copyright notices are included under
 `usr/share/doc/bundled-licenses/` inside the AppImage.
